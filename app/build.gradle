@@ -49,7 +49,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.6'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1'
 
-    // Shizuku 官方 API 支持
-    implementation 'dev.rikka.shizuku:api:13.1.5'
-    implementation 'dev.rikka.shizuku:provider:13.1.5'
+    // 内嵌式纯 Kotlin ADB 协议引擎（免 Root、免外部 Shizuku、纯 Socket 协议栈）
+    implementation 'dev.mobile:dadb:1.2.9'
 }

@@ -2,7 +2,6 @@ package com.hermes.adbremote.ui
 
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -18,21 +17,12 @@ import com.hermes.adbremote.R
 import com.hermes.adbremote.adb.RemoteAdbManager
 import com.hermes.adbremote.databinding.ActivityMainBinding
 import kotlinx.coroutines.launch
-import rikka.shizuku.Shizuku
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val adbManager = RemoteAdbManager()
     private lateinit var appAdapter: RemoteAppAdapter
-
-    private val shizukuPermissionListener = Shizuku.OnRequestPermissionResultListener { requestCode: Int, grantResult: Int ->
-        if (grantResult == PackageManager.PERMISSION_GRANTED) {
-            updateShizukuStatus(true)
-        } else {
-            updateShizukuStatus(false)
-        }
-    }
 
     private val selectApkLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
@@ -47,38 +37,8 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        initShizuku()
         initTabs()
         initViews()
-    }
-
-    private fun initShizuku() {
-        try {
-            Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
-            if (Shizuku.pingBinder()) {
-                if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-                    updateShizukuStatus(true)
-                } else {
-                    Shizuku.requestPermission(1001)
-                }
-            } else {
-                updateShizukuStatus(false)
-            }
-        } catch (e: Exception) {
-            updateShizukuStatus(false)
-        }
-    }
-
-    private fun updateShizukuStatus(granted: Boolean) {
-        runOnUiThread {
-            if (granted) {
-                binding.tvShizukuState.text = "✓ Shizuku 已连接且授权就绪 (Android 16 兼容)"
-                binding.tvShizukuState.setTextColor(getColor(R.color.success))
-            } else {
-                binding.tvShizukuState.text = "✗ Shizuku 未授权或未运行，请检查 Shizuku 状态"
-                binding.tvShizukuState.setTextColor(getColor(R.color.danger))
-            }
-        }
     }
 
     private fun initTabs() {
@@ -105,6 +65,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
+        // 提示信息
+        binding.tvShizukuState.text = "✓ 内嵌纯网络 ADB 协议栈（无需安装 Shizuku，免 Root 直连）"
+        binding.tvShizukuState.setTextColor(getColor(R.color.primary))
+
         // 连接与断开
         binding.btnConnect.setOnClickListener {
             val ip = binding.etIp.text.toString().trim()
@@ -118,9 +82,10 @@ class MainActivity : AppCompatActivity() {
 
             binding.btnConnect.isEnabled = false
             binding.tvStatus.text = "正在连接 $ip:$port ..."
+            binding.tvStatus.setTextColor(getColor(R.color.text_secondary))
 
             lifecycleScope.launch {
-                val (success, msg) = adbManager.connect(ip, port)
+                val (success, msg) = adbManager.connect(this@MainActivity, ip, port)
                 binding.btnConnect.isEnabled = true
                 binding.btnDisconnect.isEnabled = success
                 binding.tvStatus.text = msg
@@ -171,7 +136,7 @@ class MainActivity : AppCompatActivity() {
         // 安装面板
         binding.btnSelectApk.setOnClickListener {
             if (!adbManager.isConnected) {
-                Toast.makeText(this, "请先连接远程设备", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "请先在首页连接远程设备", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -218,12 +183,5 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        try {
-            Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener)
-        } catch (e: Exception) {}
     }
 }
