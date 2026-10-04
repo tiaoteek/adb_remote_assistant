@@ -39,7 +39,7 @@ class RemoteAdbManager {
                 Pair(true, "连接成功: $currentTarget")
             } else {
                 dadb.close()
-                Pair(false, "连接响应异常: ${testResp.error.ifEmpty { testResp.output }}")
+                Pair(false, "连接响应异常: ${testResp.allOutput}")
             }
         } catch (e: Exception) {
             currentDadb = null
@@ -88,7 +88,7 @@ class RemoteAdbManager {
             if (res.exitCode == 0) {
                 Pair(true, "已成功停止: $packageName")
             } else {
-                Pair(false, "停止失败: ${res.error.ifEmpty { res.output }}")
+                Pair(false, "停止失败: ${res.allOutput}")
             }
         } catch (e: Exception) {
             Pair(false, "执行异常: ${e.localizedMessage}")
