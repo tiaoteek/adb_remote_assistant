@@ -30,9 +30,12 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          gradle assembleDebug --stacktrace || (echo "FAILED" && exit 1)
-          echo "Listing APK files:"
-          find app/ -name "*.apk" || true
+          gradle assembleDebug --stacktrace --info 2>&1 | tee build.log || true
+          echo "=== TAIL LOG ==="
+          tail -n 120 build.log
+          echo "=== CHECK STATUS ==="
+          grep -i "BUILD SUCCESSFUL" build.log || exit 1
+
 
 
       - name: Upload Artifact
