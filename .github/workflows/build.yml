@@ -27,7 +27,8 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          gradle assembleDebug --stacktrace
+          gradle assembleDebug --stacktrace 2>&1 | tee build_output.log || (echo "=== LOG START ===" && tail -n 150 build_output.log && echo "=== LOG END ===" && exit 1)
+
 
 
 
