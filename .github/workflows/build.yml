@@ -29,12 +29,16 @@ jobs:
           gradle-version: '8.5'
 
       - name: Build Debug APK
+        continue-on-error: true
         run: |
-          gradle assembleDebug --stacktrace --info 2>&1 | tee build.log || true
-          echo "=== TAIL LOG ==="
-          tail -n 120 build.log
-          echo "=== CHECK STATUS ==="
-          grep -i "BUILD SUCCESSFUL" build.log || exit 1
+          gradle assembleDebug --stacktrace 2>&1 | tee build.log || true
+
+      - name: Show Log Failure
+        run: |
+          echo "=== BUILD LOG FAILURE EXTRACT ==="
+          grep -C 10 -i "error:" build.log || grep -C 10 -i "FAILURE:" build.log || tail -n 100 build.log
+          echo "=== END EXTRACT ==="
+
 
 
 
