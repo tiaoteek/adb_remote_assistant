@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">远程ADB助手</string>
+    <string name="device_connect">设备连接</string>
+    <string name="app_manager">应用管理</string>
+    <string name="apk_install">安装应用</string>
+    <string name="connect">连接</string>
+    <string name="disconnect">断开</string>
+    <string name="ip_hint">远程设备IP (例: 192.168.1.100)</string>
+    <string name="port_hint">端口 (默认 5555)</string>
+    <string name="status_not_connected">未连接远程设备</string>
+    <string name="status_connected">已连接: %1$s</string>
+    <string name="select_apk">从本地选择 APK 安装包</string>
+    <string name="refresh">刷新列表</string>
+    <string name="search_hint">搜索包名...</string>
+    <string name="force_stop">强行停止</string>
+    <string name="shizuku_not_ready">Shizuku 未授权或未运行，请先在 Shizuku 中授权</string>
+</resources>
