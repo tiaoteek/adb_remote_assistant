@@ -29,38 +29,15 @@ jobs:
           gradle-version: '8.5'
 
       - name: Build Debug APK
-        continue-on-error: true
         run: |
-          gradle assembleDebug --stacktrace 2>&1 | tee build.log || true
-
-      - name: Show Log Failure
-        run: |
-          mkdir -p issue_dump
-          head -n 200 build.log > issue_dump/head.log
-          tail -n 300 build.log > issue_dump/tail.log
-
-      - name: Upload Build Log
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: issue_dump/
-
-
-
-
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          gradle assembleDebug --stacktrace
+          ls -la app/build/outputs/apk/debug/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: diag-log
-          name: Diagnostic Build Log
-          files: issue_dump/*.log
+          tag_name: v1.0.0
+          name: AdbRemoteAssistant v1.0.0 (Android 16 / HyperOS 3 & 32/64-bit)
+          files: app/build/outputs/apk/debug/app-debug.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
