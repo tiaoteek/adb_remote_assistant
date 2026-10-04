@@ -17,9 +17,8 @@ import com.google.android.material.tabs.TabLayout
 import com.hermes.adbremote.R
 import com.hermes.adbremote.adb.RemoteAdbManager
 import com.hermes.adbremote.databinding.ActivityMainBinding
-import com.hermes.adbremote.shizuku.ShizukuShell
-import dev.rikka.shizuku.Shizuku
 import kotlinx.coroutines.launch
+import rikka.shizuku.Shizuku
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,7 +26,7 @@ class MainActivity : AppCompatActivity() {
     private val adbManager = RemoteAdbManager()
     private lateinit var appAdapter: RemoteAppAdapter
 
-    private val shizukuPermissionListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
+    private val shizukuPermissionListener = Shizuku.OnRequestPermissionResultListener { requestCode: Int, grantResult: Int ->
         if (grantResult == PackageManager.PERMISSION_GRANTED) {
             updateShizukuStatus(true)
         } else {

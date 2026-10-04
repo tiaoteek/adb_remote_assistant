@@ -1,9 +1,9 @@
 package com.hermes.adbremote.shizuku
 
 import android.content.pm.PackageManager
-import dev.rikka.shizuku.Shizuku
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import rikka.shizuku.Shizuku
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -27,8 +27,15 @@ object ShizukuShell {
         }
 
         try {
-            // 使用 Shizuku 原生反射创建带特权的 Process (UID=2000 shell)
-            val process = Shizuku.newProcess(arrayOf("sh", "-c", cmd), null, null)
+            // 反射调用 Shizuku 内部进程创建方法以兼容所有版本的 Shizuku (UID=2000 shell)
+            val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            )
+            newProcessMethod.isAccessible = true
+            val process = newProcessMethod.invoke(null, arrayOf("sh", "-c", cmd), null, null) as Process
 
             val outputText = StringBuilder()
             val errorText = StringBuilder()
