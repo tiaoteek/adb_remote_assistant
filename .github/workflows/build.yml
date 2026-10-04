@@ -30,8 +30,10 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          gradle assembleDebug --stacktrace
-          ls -la app/build/outputs/apk/debug/
+          gradle assembleDebug --stacktrace || (echo "FAILED" && exit 1)
+          echo "Listing APK files:"
+          find app/ -name "*.apk" || true
+
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
