@@ -32,8 +32,8 @@ jobs:
         run: |
           gradle assembleDebug -Pandroid.useAndroidX=true --stacktrace 2>&1 | tee build.log || true
           mkdir -p issue_dump
-          head -n 200 build.log > issue_dump/head.log
-          tail -n 300 build.log > issue_dump/tail.log
+          grep -C 3 -E ":compile.*Kotlin|e: " build.log > issue_dump/kotlin_err.log || true
+          tail -n 250 build.log > issue_dump/tail.log
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
@@ -43,4 +43,5 @@ jobs:
           files: issue_dump/*.log
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
