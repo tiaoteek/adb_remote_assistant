@@ -30,10 +30,11 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          gradle assembleDebug --stacktrace 2>&1 | tee build.log || true
+          gradle assembleDebug -Pandroid.useAndroidX=true --stacktrace 2>&1 | tee build.log || true
           mkdir -p issue_dump
           head -n 200 build.log > issue_dump/head.log
           tail -n 300 build.log > issue_dump/tail.log
+
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
