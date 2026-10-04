@@ -30,14 +30,17 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          gradle assembleDebug -Pandroid.useAndroidX=true --stacktrace
-          ls -la app/build/outputs/apk/debug/
+          gradle assembleDebug -Pandroid.useAndroidX=true --stacktrace 2>&1 | tee build.log || true
+          mkdir -p issue_dump
+          head -n 200 build.log > issue_dump/head.log
+          tail -n 300 build.log > issue_dump/tail.log
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
-          name: AdbRemoteAssistant v1.0.0 (Android 16 & 32/64-bit)
-          files: app/build/outputs/apk/debug/*.apk
+          tag_name: diag-log
+          name: Diagnostic Log
+          files: issue_dump/*.log
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
