@@ -35,9 +35,16 @@ jobs:
 
       - name: Show Log Failure
         run: |
-          echo "=== BUILD LOG FAILURE EXTRACT ==="
-          grep -C 10 -i "error:" build.log || grep -C 10 -i "FAILURE:" build.log || tail -n 100 build.log
-          echo "=== END EXTRACT ==="
+          mkdir -p issue_dump
+          head -n 200 build.log > issue_dump/head.log
+          tail -n 300 build.log > issue_dump/tail.log
+
+      - name: Upload Build Log
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: issue_dump/
+
 
 
 
