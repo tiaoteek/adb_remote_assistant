@@ -30,15 +30,17 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          gradle assembleDebug -Pandroid.useAndroidX=true --stacktrace
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AdbRemoteAssistant_Standalone.apk
-          ls -la app/build/outputs/apk/debug/
+          gradle assembleDebug -Pandroid.useAndroidX=true --stacktrace 2>&1 | tee build.log || true
+          mkdir -p issue_dump
+          grep -C 3 -E ":compile.*Kotlin|e: " build.log > issue_dump/kotlin_err.log || true
+          tail -n 250 build.log > issue_dump/tail.log
 
       - name: Release APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.1
-          name: AdbRemoteAssistant v1.0.1 (完全独立免Shizuku版·全架构通用)
-          files: app/build/outputs/apk/debug/AdbRemoteAssistant_Standalone.apk
+          tag_name: diag-dadb-err
+          name: Diagnostic Dadb Error
+          files: issue_dump/*.log
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
