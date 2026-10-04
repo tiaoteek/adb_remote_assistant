@@ -30,7 +30,8 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace > build.log 2>&1 || (cat build.log | tail -n 120 && exit 1)
+
 
 
 
