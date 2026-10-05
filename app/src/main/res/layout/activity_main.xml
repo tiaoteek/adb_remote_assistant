@@ -43,6 +43,44 @@
 
         </com.google.android.material.tabs.TabLayout>
 
+        <!-- 全局常驻实时设备连接状态条（各Tab均可见，带实时心跳反馈） -->
+        <LinearLayout
+            android:id="@+id/bannerGlobalStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#15000000"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp">
+
+            <View
+                android:id="@+id/viewStatusDot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="@drawable/indicator_disconnected" />
+
+            <TextView
+                android:id="@+id/tvGlobalStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="未连接远程设备"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tvReconnectHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="点击重连"
+                android:textColor="@color/accent"
+                android:textSize="12sp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
@@ -138,11 +176,12 @@
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
-                android:id="@+id/tvShizukuState"
+                android:id="@+id/tvEngineInfo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Shizuku 授权状态检测中..."
+                android:text="✓ 内嵌纯网络原生 ADB 引擎（具备心跳监测与自动静默自愈重连）"
+                android:textColor="@color/primary"
                 android:textSize="13sp" />
 
         </LinearLayout>
@@ -208,7 +247,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:gravity="center"
-                android:text="就绪，点击上方按钮选择 APK 进行远程推送安装"
+                android:text="就绪：点击上方按钮选择 APK，系统将自动确保连接并推流静默安装"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
