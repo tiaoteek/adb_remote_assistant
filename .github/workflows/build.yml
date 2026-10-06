@@ -38,7 +38,7 @@ jobs:
         run: |
           ./gradlew assembleDebug -Pandroid.useAndroidX=true 2>&1 | tee /tmp/build_log.txt || true
           mkdir -p build_logs
-          grep -C 5 "e: " /tmp/build_log.txt > build_logs/build_log.txt || tail -n 150 /tmp/build_log.txt > build_logs/build_log.txt
+          grep -E "([A-Za-z0-9_]+\.kt:[0-9]+:[0-9]+|Unresolved reference|Cannot access|None of the following)" /tmp/build_log.txt > build_logs/build_log.txt || head -n 40 /tmp/build_log.txt > build_logs/build_log.txt
           cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.3.apk 2>/dev/null || true
 
       - name: Release APK
