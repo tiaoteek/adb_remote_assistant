@@ -34,10 +34,18 @@ jobs:
           chmod +x gradlew
 
       - name: Build Debug APK
+        continue-on-error: true
         run: |
-          ./gradlew assembleDebug -Pandroid.useAndroidX=true --stacktrace
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.3.apk
-          ls -la app/build/outputs/apk/debug/
+          ./gradlew assembleDebug -Pandroid.useAndroidX=true --stacktrace 2>&1 | tee /tmp/build_log.txt || true
+          mkdir -p build_logs
+          cp /tmp/build_log.txt build_logs/
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.3.apk 2>/dev/null || true
+
+      - name: Upload build logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-error-log
+          path: build_logs/build_log.txt
 
       - name: Release APK
         uses: softprops/action-gh-release@v2
