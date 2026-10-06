@@ -2,7 +2,7 @@
     <string name="app_name">远程ADB助手</string>
     <string name="device_connect">设备连接</string>
     <string name="app_manager">应用管理</string>
-    <string name="apk_install">安装应用</string>
+    <string name="apk_install">文件/安装</string>
     <string name="connect">连接</string>
     <string name="disconnect">断开</string>
     <string name="ip_hint">远程设备IP (例: 192.168.1.100)</string>

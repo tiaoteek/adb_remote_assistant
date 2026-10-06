@@ -224,41 +224,166 @@
 
         </LinearLayout>
 
-        <!-- 3. APK 安装面板 -->
-        <LinearLayout
+        <!-- 3. APK 安装与文件推送面板 -->
+        <ScrollView
             android:id="@+id/panelInstall"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="24dp"
             android:visibility="gone">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSelectApk"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:text="@string/select_apk"
-                app:icon="@android:drawable/ic_menu_upload" />
-
-            <TextView
-                android:id="@+id/tvInstallProgress"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:gravity="center"
-                android:text="就绪：点击上方按钮选择 APK，系统将自动确保连接并推流静默安装"
-                android:textColor="@color/text_secondary"
-                android:textSize="14sp" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <ProgressBar
-                android:id="@+id/pbInstall"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:visibility="gone" />
+                <!-- 模式切换卡片 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="2dp"
+                    app:contentPadding="16dp">
 
-        </LinearLayout>
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="传输模式与目标设置"
+                            android:textColor="@color/primary"
+                            android:textStyle="bold"
+                            android:textSize="15sp" />
+
+                        <RadioGroup
+                            android:id="@+id/rgTransferMode"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical">
+
+                            <RadioButton
+                                android:id="@+id/rbDirectInstall"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true"
+                                android:text="直接安装到系统（自动覆盖安装 -r）" />
+
+                            <RadioButton
+                                android:id="@+id/rbPushToDir"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="推送文件至远程设备指定目录（不自动安装）" />
+
+                        </RadioGroup>
+
+                        <!-- 指定路径输入区（推送模式下激活） -->
+                        <LinearLayout
+                            android:id="@+id/layoutCustomPath"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <com.google.android.material.textfield.TextInputLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="远程目标目录路径">
+
+                                <com.google.android.material.textfield.TextInputEditText
+                                    android:id="@+id/etRemotePath"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:inputType="textUri"
+                                    android:text="/sdcard/Download/" />
+                            </com.google.android.material.textfield.TextInputLayout>
+
+                            <!-- 常用快捷目录 -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="6dp"
+                                android:orientation="horizontal">
+
+                                <TextView
+                                    android:id="@+id/tvQuickDownload"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="?attr/selectableItemBackground"
+                                    android:padding="4dp"
+                                    android:text="[下载目录 Download]"
+                                    android:textColor="@color/primary"
+                                    android:textSize="12sp" />
+
+                                <TextView
+                                    android:id="@+id/tvQuickTmp"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:background="?attr/selectableItemBackground"
+                                    android:padding="4dp"
+                                    android:text="[临时目录 /data/local/tmp]"
+                                    android:textColor="@color/primary"
+                                    android:textSize="12sp" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 操作按钮与执行卡片 -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="2dp"
+                    app:contentPadding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSelectApk"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="@string/select_apk"
+                            app:icon="@android:drawable/ic_menu_upload" />
+
+                        <TextView
+                            android:id="@+id/tvInstallProgress"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:gravity="center"
+                            android:text="就绪：选择本地 APK 文件，将根据上方设置执行安装或精准推送到指定目录"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="14sp" />
+
+                        <ProgressBar
+                            android:id="@+id/pbInstall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:visibility="gone" />
+
+                    </LinearLayout>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+        </ScrollView>
 
     </FrameLayout>
 

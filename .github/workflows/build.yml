@@ -31,14 +31,14 @@ jobs:
       - name: Build Debug APK
         run: |
           gradle assembleDebug -Pandroid.useAndroidX=true --stacktrace
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.2_AutoReconnect.apk
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.3.apk
           ls -la app/build/outputs/apk/debug/
 
       - name: Release APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.2
-          name: AdbRemoteAssistant v1.0.2 (心跳保活·智能自愈重连·设备记忆版)
-          files: app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.2_AutoReconnect.apk
+          tag_name: v1.0.3
+          name: AdbRemoteAssistant v1.0.3 (支持指定位置文件推送与静默安装)
+          files: app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.3.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

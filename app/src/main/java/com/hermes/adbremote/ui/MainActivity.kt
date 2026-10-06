@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.provider.OpenableColumns
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -15,7 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.tabs.TabLayout
 import com.hermes.adbremote.R
-import com.hermes.adbremote.adb.ConnectionStatus
+import com.hermes.adbremote.adb.ConnectionState
 import com.hermes.adbremote.adb.RemoteAdbManager
 import com.hermes.adbremote.databinding.ActivityMainBinding
 import kotlinx.coroutines.flow.collectLatest
@@ -24,13 +25,12 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private val adbManager = RemoteAdbManager()
     private lateinit var appAdapter: RemoteAppAdapter
 
     private val selectApkLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
-                handleInstallApk(uri)
+                handleFileAction(uri)
             }
         }
     }
@@ -95,8 +95,8 @@ class MainActivity : AppCompatActivity() {
 
         binding.btnDisconnect.setOnClickListener {
             lifecycleScope.launch {
-                val (_, msg) = adbManager.disconnect()
-                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
+                RemoteAdbManager.disconnect()
+                Toast.makeText(this@MainActivity, "已断开连接", Toast.LENGTH_SHORT).show()
                 appAdapter.updateData(emptyList())
             }
         }
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
         // 应用管理
         appAdapter = RemoteAppAdapter(emptyList()) { app ->
             lifecycleScope.launch {
-                val (_, msg) = adbManager.stopApp(this@MainActivity, app.packageName)
+                val (_, msg) = RemoteAdbManager.stopApp(this@MainActivity, app.packageName)
                 Toast.makeText(this@MainActivity, msg, Toast.LENGTH_SHORT).show()
             }
         }
@@ -124,13 +124,34 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        // 安装面板
+        // 安装/推送面板：模式切换监听
+        binding.rgTransferMode.setOnCheckedChangeListener { _, checkedId ->
+            if (checkedId == R.id.rbPushToDir) {
+                binding.layoutCustomPath.visibility = View.VISIBLE
+                binding.btnSelectApk.text = "选择 APK 文件并推送到指定位置"
+            } else {
+                binding.layoutCustomPath.visibility = View.GONE
+                binding.btnSelectApk.text = getString(R.string.select_apk)
+            }
+        }
+
+        // 快捷路径填充
+        binding.tvQuickDownload.setOnClickListener {
+            binding.etRemotePath.setText("/sdcard/Download/")
+        }
+        binding.tvQuickTmp.setOnClickListener {
+            binding.etRemotePath.setText("/data/local/tmp/")
+        }
+
+        // 选择 APK 按钮
         binding.btnSelectApk.setOnClickListener {
             val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                type = "application/vnd.android.package-archive"
+                type = "*/*"
+                val mimeTypes = arrayOf("application/vnd.android.package-archive", "application/octet-stream")
+                putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
                 addCategory(Intent.CATEGORY_OPENABLE)
             }
-            selectApkLauncher.launch(Intent.createChooser(intent, "选择要推送的 APK"))
+            selectApkLauncher.launch(Intent.createChooser(intent, "选择 APK 文件"))
         }
     }
 
@@ -140,7 +161,7 @@ class MainActivity : AppCompatActivity() {
         binding.tvStatus.setTextColor(getColor(R.color.text_secondary))
 
         lifecycleScope.launch {
-            val (success, msg) = adbManager.connect(this@MainActivity, ip, port)
+            val (success, msg) = RemoteAdbManager.connect(this@MainActivity, ip, port)
             binding.btnConnect.isEnabled = true
             binding.btnDisconnect.isEnabled = success
             binding.tvStatus.text = msg
@@ -161,20 +182,20 @@ class MainActivity : AppCompatActivity() {
      */
     private fun observeConnectionState() {
         lifecycleScope.launchWhenStarted {
-            adbManager.connectionState.collectLatest { status ->
-                when (status) {
-                    is ConnectionStatus.Connected -> {
+            RemoteAdbManager.connectionState.collectLatest { state ->
+                when (state) {
+                    ConnectionState.CONNECTED -> {
                         binding.viewStatusDot.setBackgroundResource(R.drawable.indicator_connected)
-                        binding.tvGlobalStatus.text = "已连接: ${status.target} (心跳正常)"
+                        binding.tvGlobalStatus.text = "已连接远程设备 (心跳在线)"
                         binding.tvReconnectHint.visibility = View.GONE
                         binding.btnConnect.isEnabled = false
                         binding.btnDisconnect.isEnabled = true
-                        binding.tvStatus.text = "已连接: ${status.target}"
+                        binding.tvStatus.text = "已连接远程设备"
                         binding.tvStatus.setTextColor(getColor(R.color.success))
                     }
-                    is ConnectionStatus.Reconnecting -> {
+                    ConnectionState.RECONNECTING -> {
                         binding.viewStatusDot.setBackgroundResource(R.drawable.indicator_reconnecting)
-                        binding.tvGlobalStatus.text = "连接波动: 正在自动重连 ${status.target}..."
+                        binding.tvGlobalStatus.text = "连接波动: 正在自动重连..."
                         binding.tvReconnectHint.visibility = View.VISIBLE
                         binding.tvReconnectHint.text = "点击立即重试"
                         binding.btnConnect.isEnabled = true
@@ -182,14 +203,14 @@ class MainActivity : AppCompatActivity() {
                         binding.tvStatus.text = "正在自动重连..."
                         binding.tvStatus.setTextColor(getColor(R.color.text_secondary))
                     }
-                    is ConnectionStatus.Connecting -> {
+                    ConnectionState.CONNECTING -> {
                         binding.viewStatusDot.setBackgroundResource(R.drawable.indicator_reconnecting)
-                        binding.tvGlobalStatus.text = "正在连接 ${status.target}..."
+                        binding.tvGlobalStatus.text = "正在握手连接中..."
                         binding.tvReconnectHint.visibility = View.GONE
                         binding.btnConnect.isEnabled = false
                         binding.btnDisconnect.isEnabled = false
                     }
-                    is ConnectionStatus.Disconnected -> {
+                    ConnectionState.DISCONNECTED -> {
                         binding.viewStatusDot.setBackgroundResource(R.drawable.indicator_disconnected)
                         binding.tvGlobalStatus.text = "未连接远程设备"
                         binding.tvReconnectHint.visibility = View.VISIBLE
@@ -199,16 +220,6 @@ class MainActivity : AppCompatActivity() {
                         binding.tvStatus.text = getString(R.string.status_not_connected)
                         binding.tvStatus.setTextColor(getColor(R.color.text_secondary))
                     }
-                    is ConnectionStatus.Failed -> {
-                        binding.viewStatusDot.setBackgroundResource(R.drawable.indicator_disconnected)
-                        binding.tvGlobalStatus.text = "连接断开: ${status.message.take(24)}..."
-                        binding.tvReconnectHint.visibility = View.VISIBLE
-                        binding.tvReconnectHint.text = "点击重试"
-                        binding.btnConnect.isEnabled = true
-                        binding.btnDisconnect.isEnabled = false
-                        binding.tvStatus.text = status.message
-                        binding.tvStatus.setTextColor(getColor(R.color.danger))
-                    }
                 }
             }
         }
@@ -217,7 +228,7 @@ class MainActivity : AppCompatActivity() {
     private fun loadRemoteApps() {
         lifecycleScope.launch {
             Toast.makeText(this@MainActivity, "正在同步远程应用列表...", Toast.LENGTH_SHORT).show()
-            val list = adbManager.listPackages(this@MainActivity, includeSystem = false)
+            val list = RemoteAdbManager.listPackages(this@MainActivity, includeSystem = false)
             appAdapter.updateData(list)
             if (list.isNotEmpty()) {
                 Toast.makeText(this@MainActivity, "已加载 ${list.size} 个第三方应用", Toast.LENGTH_SHORT).show()
@@ -225,14 +236,45 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleInstallApk(uri: Uri) {
+    private fun getFileNameFromUri(uri: Uri): String {
+        var name = "app_payload.apk"
+        try {
+            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                if (cursor.moveToFirst() && nameIndex != -1) {
+                    val displayName = cursor.getString(nameIndex)
+                    if (!displayName.isNullOrBlank()) {
+                        name = displayName
+                    }
+                }
+            }
+        } catch (e: Exception) {}
+        if (!name.endsWith(".apk", ignoreCase = true)) {
+            name += ".apk"
+        }
+        return name
+    }
+
+    private fun handleFileAction(uri: Uri) {
+        val isPushMode = binding.rbPushToDir.isChecked
+        val targetDir = binding.etRemotePath.text.toString().trim().ifEmpty { "/sdcard/Download/" }
+        val fileName = getFileNameFromUri(uri)
+
         binding.pbInstall.visibility = View.VISIBLE
         binding.btnSelectApk.isEnabled = false
 
         lifecycleScope.launch {
-            val (success, msg) = adbManager.installApk(this@MainActivity, uri) { progress ->
-                runOnUiThread {
-                    binding.tvInstallProgress.text = progress
+            val (success, msg) = if (isPushMode) {
+                RemoteAdbManager.pushApkToRemotePath(this@MainActivity, uri, fileName, targetDir) { progress ->
+                    runOnUiThread {
+                        binding.tvInstallProgress.text = progress
+                    }
+                }
+            } else {
+                RemoteAdbManager.installApk(this@MainActivity, uri) { progress ->
+                    runOnUiThread {
+                        binding.tvInstallProgress.text = progress
+                    }
                 }
             }
 
@@ -242,7 +284,7 @@ class MainActivity : AppCompatActivity() {
 
             if (success) {
                 binding.tvInstallProgress.setTextColor(getColor(R.color.success))
-                Toast.makeText(this@MainActivity, "远程设备安装完成！", Toast.LENGTH_LONG).show()
+                Toast.makeText(this@MainActivity, if (isPushMode) "文件推送成功！" else "远程设备安装完成！", Toast.LENGTH_LONG).show()
             } else {
                 binding.tvInstallProgress.setTextColor(getColor(R.color.danger))
                 Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
@@ -263,7 +305,6 @@ class MainActivity : AppCompatActivity() {
         if (savedIp.isNotEmpty()) {
             binding.etIp.setText(savedIp)
             binding.etPort.setText(savedPort.toString())
-            // 启动时自动尝试恢复连接历史设备
             startConnect(savedIp, savedPort)
         }
     }
