@@ -58,14 +58,7 @@ object RemoteAdbManager {
             }
         }
 
-        val kpg = KeyPairGenerator.getInstance("RSA")
-        kpg.initialize(2048)
-        val kp = kpg.generateKeyPair()
-
-        val privKey = kp.private as RSAPrivateCrtKey
-        val pubKey = kp.public
-
-        AdbKeyPair.write(privKey, pubKey, privFile, pubFile)
+        AdbKeyPair.generate(privFile, pubFile)
         return AdbKeyPair.read(privFile, pubFile)
     }
 

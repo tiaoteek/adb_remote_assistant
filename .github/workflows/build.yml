@@ -34,19 +34,16 @@ jobs:
           chmod +x gradlew
 
       - name: Build Debug APK
-        continue-on-error: true
         run: |
-          ./gradlew compileDebugKotlin --stacktrace 2>&1 | tee /tmp/compile_log.txt || true
-          mkdir -p build_logs
-          head -n 45 /tmp/compile_log.txt > build_logs/build_log.txt
-          ./gradlew assembleDebug -Pandroid.useAndroidX=true 2>&1 || true
-          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.3.apk 2>/dev/null || true
+          ./gradlew assembleDebug -Pandroid.useAndroidX=true --stacktrace
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.3.apk
+          ls -la app/build/outputs/apk/debug/
 
       - name: Release APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-log-temp
-          name: Build Log Temp
-          files: build_logs/build_log.txt
+          tag_name: v1.0.3
+          name: AdbRemoteAssistant v1.0.3 (支持指定位置文件推送与静默安装)
+          files: app/build/outputs/apk/debug/AdbRemoteAssistant_v1.0.3.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
